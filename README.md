@@ -10,7 +10,7 @@
 - A simplified version of this model was created by Spencer in Excel and translated to JavaScript to produce Sankey charts. We aim to enhance this process. [Existing Sankey](https://www.NosTerra.com/sankey-test)
 
 ### Enhancements:
-- Both models rely on gathering extensive data, such as LCOE and efficiency of various energy generation methods like natural gas turbines, solar, hydroelectric, etc.
+- Both models rely on gathering extensive data, such as the LCOE and efficiency of various energy generation methods like natural gas turbines, solar PV, hydroelectric, etc.
 - We have identified key weaknesses in the existing data and assumptions, which we need help to address.
 - [LCOE Presentation](1.START_HERE/2.%20LCOE%20Review.pptx)
 
