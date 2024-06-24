@@ -7,7 +7,7 @@
 ## Big Picture How:
 - Build a simple-to-moderately complex modeling system that allows users to vary parameters and make predictions.
 - A simplified version of this model was created by Spencer in Excel and translated to JavaScript to produce Sankey charts. We aim to enhance this process.
-- [Existing Sankey](NosTerra.com/sankey-test)
+- [Existing Sankey](https://www.NosTerra.com/sankey-test)
 
 ### Enhancements:
 - Both models rely on gathering extensive data, such as LCOE and efficiency of various energy generation methods like natural gas turbines, solar, hydroelectric, etc.
