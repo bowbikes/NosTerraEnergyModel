@@ -21,5 +21,5 @@
 
 ### Documentation:
 - A detailed spec and examples can be found in the documentation below.
-- [Insert spec](START_HERE/3.%20Data%20Spec.docx)
+- [Detailed Spec](START_HERE/3.%20Data%20Spec.docx)
 - [Solar example](START_HERE/examples/solar)
