@@ -6,9 +6,8 @@
 
 ## Big Picture How:
 - Build a simple-to-moderately complex modeling system that allows users to vary parameters and make predictions.
-- ![ComplexModel](https://github.com/bowbikes/NosTerraEnergyModel/assets/121573080/49d2ae62-7a5a-421d-ab41-d0dc8d3d15c3)
-- A simplified version of this model was created by Spencer in Excel and translated to JavaScript to produce Sankey charts. We aim to enhance this process.
-- [Existing Sankey](https://www.NosTerra.com/sankey-test)
+- ![ComplexModel](ModelDiagram/ComplexModel.png)
+- A simplified version of this model was created by Spencer in Excel and translated to JavaScript to produce Sankey charts. We aim to enhance this process. [Existing Sankey](https://www.NosTerra.com/sankey-test)
 
 ### Enhancements:
 - Both models rely on gathering extensive data, such as LCOE and efficiency of various energy generation methods like natural gas turbines, solar, hydroelectric, etc.
