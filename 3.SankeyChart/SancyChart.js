@@ -1,6 +1,172 @@
+<div id="sankey-chart"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+window.fetchDataAndUpdateChart = function() {
+  return new Promise((resolve,reject) => {
+  //window._scen === null ? 181 : window._scen;
+  //window._year === null ? 2022 : window._year;
+  //window._view === null ? "Consumption" : window._view;
+  //window._mode === null ? "Graphical" : window._mode;
+  const baseUrl = `https://sankeydata.s3.amazonaws.com/scen_${window._scen}/${window._year}/`;
+  
+  console.log('base URL is ', baseUrl)
+  Promise.all([
+    d3.json(baseUrl + window._view + '/nodes.json'),
+    d3.json(baseUrl + window._view + '/links.json'),
+    d3.json(baseUrl.slice(0, -5) + 'ScenarioSummaryTotals.json')
+    // Add other necessary files if there are more than these two
+  ]).then(function([_nodeData, _linkData, _summaryData]) {
+    // Attach to the global window object
+    window.globalNodeData = _nodeData;
+    window.globalLinkData = _linkData;
+    window.globalSummaryData = _summaryData;
+    // Assuming you have a function to update the chart with new data
+    const colorScale = globalNodeData.data.map(node => node.Color);
+    window.globalColorScale = colorScale;
+    resolve();
+  }).catch(error => {
+    console.error('Fetching error: ', error);
+    reject(error);
+   });
+ });
+};
+
+window.fetchDataAndUpdateChart().then(() => {
+    console.log("Fetch completed, now running loadDataAndProcess");
+    loadDataAndProcess(); // Make sure this call is within or after the promise resolution
+  });
+
+async function loadDataAndProcess() {
+  try {
+    await window.fetchDataAndUpdateChart();
+    // variables
+    const _linkData = window.globalLinkData;
+    const _nodeData = window.globalNodeData;
+    const _summaryData = window.globalSummaryData;
+    //window._view = document.getElementById('window._view');
+   // window._year = document.getElementById('window._year');
+   // window._scen = document.getElementById('window._scen');
+   // window._mode = document.getElementById('window._mode');
+    const colorScale = window.globalColorScale;
+  } catch (error) {
+    console.error("Could not load data:", error);
+  }
+}
+});
+</script>
+<script>
+const _nodeShift = [{
+     'Grid': 0.0,
+     'Residential': 0.5,
+     'Commercial': 0.6,
+     'Industrial': 0.7,
+     'Transportation': 0.85,
+     'Rejected Energy': 0.35,
+     'Energy Services': 0.7,
+     'Total Emissions': 0.3,
+     'Total Cost': 0.3
+}]
+
+const _height = 400;
+const _width = 1400;
+const _itterations = 120;
+const startKneeOffset = 90;
+const _layerValEntry = 190;
+const _layerValExit = 95;
+const endKneeOffset = 115;
+const r = 55;
+const _nodeWidth = 80;
+const linkOpacity = 97;
+const _padding = 30;
+const linkThreshold = 0.02;
+  // helper functions (straightLine, linkSort, drawSort)
+function straightLine(d) {
+  const startKnee = 
+    d.y0 <= _height/2
+      ? startKneeOffset + (d.source.y0-d.y0) + (_layerValEntry*((d.target.layer-d.source.layer)-1))
+      : startKneeOffset - (d.source.y0-d.y0) + (_layerValEntry*((d.target.layer-d.source.layer)-1));
+  // maybe fix some of this with a layer amount
+  const endKnee = 
+    d.y1 <= _height/2
+      ? d.target.id === 'Rejected Energy'
+        ? (endKneeOffset + (d.target.y0-d.y1)) + 50 + (_layerValExit*((d.target.layer-d.source.layer)-1))
+        : (endKneeOffset + (d.target.y0-d.y1)) + (_layerValExit*((d.target.layer-d.source.layer)-1))
+      : d.target.id === 'Energy Services'
+        ? (endKneeOffset - (d.target.y0-d.y1)) - 50 + (_layerValExit*((d.target.layer-d.source.layer)-1))
+        : (endKneeOffset - (d.target.y0-d.y1)) + (_layerValExit*((d.target.layer-d.source.layer)-1))
+      //: d.target.id === 'Total Cost'
+      //  ? (endKneeOffset - (d.target.y0-d.y1)) - 50 + (_layerValExit*((d.target.layer-d.source.layer)-1))
+      //  : (endKneeOffset - (d.target.y0-d.y1)) + (_layerValExit*((d.target.layer-d.source.layer)-1))
+
+  const returnArray = 
+    d.source.id in _nodeShift[0]
+      ? ['M', d.source.x1, d.y0 - (d.source.y0 - _height*_nodeShift[0][d.source.id]),
+        'h', startKnee ,
+        'C', 
+        // Two control points for the curve
+        d.source.x1 + startKnee+ r, d.y0 -(d.source.y0 - _height*_nodeShift[0][d.source.id])]
+      : ['M', d.source.x1, d.y0,
+      'h', startKnee ,
+      'C', 
+      // Two control points for the curve
+      d.source.x1 + startKnee+ r, d.y0]
+
+  if(d.target.id in _nodeShift[0]){
+    return returnArray.concat([d.target.x0 - endKnee - r, d.y1- (d.target.y0 - _height*_nodeShift[0][d.target.id]),
+      // Curve endpoint
+      d.target.x0 - endKnee, d.y1- (d.target.y0 - _height*_nodeShift[0][d.target.id]),
+      'h', endKnee,
+    ]).join(' ')
+  }
+  else{
+    return returnArray.concat([d.target.x0 - endKnee - r, d.y1,
+      // Curve endpoint
+      d.target.x0 - endKnee, d.y1,
+      'h', endKnee,
+    ]).join(' ')
+  } 
+}
+
+linkSort = (a, b) => {
+  function targetIndex(target) {
+    // Force grid to be sorted as first
+    if (target === "Grid") return -1
+    return globalNodeData.data.findIndex(node => node.id === target)
+  }
+  if (a.source === b.source) {
+    return targetIndex(a.target.id) - targetIndex(b.target.id)
+  }
+  if (a.target === b.target) {
+    return targetIndex(a.source.id) - targetIndex(b.source.id)
+  }
+}
+
+drawSort = (a, b) => {
+  if (a.target.id === "Rejected Energy" && a.source.id === "Grid")
+    return 0;
+  if (b.target.id === "Rejected Energy" && b.source.id === "Grid")
+    return 0;
+  if (a.target.id === "Rejected Energy" || a.source.id === "Grid")
+    return -1;
+  if (b.target.id === "Rejected Energy" || b.source.id === "Grid")
+    return 1;
+  if (a.target.id === "Energy Services")
+    return 1
+  if (b.target.id === "Energy Services")
+    return -1
+  if (a.source.id === "Natural Gas")
+    return 1;
+  if (b.source.id === "Natural Gas")
+    return-1;
+  else
+    return 0;
+}
+
 function SankeyChart({
   nodes, // an iterable of node objects (typically [{id}, …]); implied by links if missing
-  links // an iterable of link objects (typically [{source, target}, …])
+  links, // an iterable of link objects (typically [{source, target}, …])
+  summaryText, // an iterable of summary objects (typically aggregates)
+  mode
 }, {
   format = ",", // a function or format specifier for values in titles
   nodeId = d => d.id, // given d in nodes, returns a unique identifier (string)
@@ -23,7 +189,7 @@ function SankeyChart({
   linkTitle = d => `${d.source.id} → ${d.target.id}\n${format(d.value)}`, // given d in (computed) links
   linkColor = 'layered', //"#aaa", // source, target, source-target, or static color
   linkStrokeOpacity = linkOpacity/100, // link stroke opacity
-  colors = colorScale, // array of colors
+  colors = window.globalColorScale, // array of colors
   width = _width, // outer width, in pixels
   height = _height, // outer height, in pixels
   marginTop = 5, // top margin, in pixels
@@ -38,7 +204,6 @@ function SankeyChart({
   if (nodes === undefined) nodes = Array.from(d3.union(LS, LT), id => ({id}));
   const N = d3.map(nodes, nodeId).map(intern);
   const G = nodeGroup == null ? null : d3.map(nodes, nodeGroup).map(intern);
-  
   // Replace the input nodes and links with mutable objects for the simulation.
   nodes = d3.map(nodes, (_, i) => ({id: N[i]}));
   links = d3.map(links, (_, i) => ({source: LS[i], target: LT[i], value: LV[i]}));
@@ -47,10 +212,8 @@ function SankeyChart({
 
   // Construct the scales.
   const color = nodeGroup == null ? null : d3.scaleOrdinal(nodeGroups, colors);
-
   // Compute the Sankey layout.
-  const sankey = d3
-      .sankey()
+  const sankey = d3.sankey()
       .nodeId(({index: i}) => N[i])
       .nodeAlign(nodeAlign)
       .nodeWidth(nodeWidth)
@@ -59,7 +222,7 @@ function SankeyChart({
       .iterations(_itterations)
       .linkSort(linkSort)
       .extent([[marginLeft, marginTop], [width - marginRight, height - marginBottom]])
-    ({nodes, links});
+      ({nodes, links});
 
   // Compute titles and labels using layout nodes, so as to access aggregate values.
   if (typeof format !== "function") format = d3.format(format);
@@ -86,7 +249,6 @@ function SankeyChart({
         return linkStrokeOpacity;
       })
 
-  //var totalNodes = _view === "Consumption" ? 16 : 17;
   var totalNodes = 16;
   
   link.append("path")
@@ -142,7 +304,7 @@ function SankeyChart({
     .join("text")
     .attr("x", d => d.x0 + 34 + (d.layer * 2))
     .attr("y", d => {
-      if(_mode==='Verbose'){
+      if(mode==='Verbose'){
         if (d.id === 'Grid') return ((d.y1 - d.y0) / 2);
         else if (d.y1-d.y0 <= nodeValsm ) {
           if (["Coal","Biomass","Petroleum"].includes(d.id)) return d.y0 - 20;
@@ -169,7 +331,7 @@ function SankeyChart({
     .attr("text-anchor", "middle")
     .text(({ index: i }) => Tl[i]);
   
-  if (_mode === "Verbose") Labels.append("tspan")
+  if (mode === "Verbose") Labels.append("tspan")
       .attr("x", d => d.x0 + 34 + (d.layer * 2))
       .attr("y", d => {
         if (d.y1-d.y0 <= nodeValsm ) {
@@ -185,19 +347,19 @@ function SankeyChart({
       })
       .attr('fill', d => {if( d.value <linkThreshold) { return 'none'}
         else if (['Nuclear', 'Hydro', 'Wind', 'Geothermal', 'Coal', 'Petroleum', 'Energy Services'].includes(d.id)) {
-          if ((d.y1-d.y0 > nodeValsm && _mode !== "Verbose") || (d.y1-d.y0 > nodeVal && _mode === "Verbose")) return 'white';
+          if ((d.y1-d.y0 > nodeValsm && mode !== "Verbose") || (d.y1-d.y0 > nodeVal && mode === "Verbose")) return 'white';
         }
         return 'black';
       })
       .attr("dy", "0.35em")
       .attr("text-anchor", "middle")
-      .text(d => _view === "Consumption" ? String(d.value.toFixed(2)) + " Quads" 
-                                         : _view === "Emissions" ? String(d.value.toFixed(2)) + " Mt CO2" 
+      .text(d => window._view === "Consumption" ? String(d.value.toFixed(2)) + " Quads" 
+                                         : window._view === "Emissions" ? String(d.value.toFixed(2)) + " Mt CO2" 
                                          : "$"+String(d.value.toFixed(2)) + "B");
 
   const linkVal = 10;
   
-  if (_mode === "Verbose") svg.append("g")
+  if (mode === "Verbose") svg.append("g")
     .attr("font-family", "sans-serif")
     .attr("font-size", 10)
     .selectAll("text")
@@ -205,8 +367,7 @@ function SankeyChart({
     .join("text")
     //X shift data
     .attr("x", d => {
-      /// for some reason this if isnt triggering
-      if (["Rejected Energy","Energy Services","Total Emissions","Total Cost"].includes(d.target.id)) {
+     if (["Rejected Energy","Energy Services","Total Emissions","Total Cost"].includes(d.target.id)) {
         return d.source.id === "Grid"? ((d.target.x0 - d.source.x1 )/2) + d.source.x1
                                      : d.source.x1+16}
       else if (d.width > linkVal ) return d.target.x0 - 16;
@@ -304,19 +465,66 @@ function SankeyChart({
   
   // Append text elements
   boxGroup.selectAll("text")
-          .data(_summaryText)
+          .data(summaryText)
           .enter()
           .append("text")
           .attr("x", boxWidth / 2)
           .attr("y", function(d, i) { return (i + 1) * 20; }) // Adjust spacing
           .attr("text-anchor", "middle")
           .text(function(d) { return d; });
-  
-  
-  
   function intern(value) {
     return value !== null && typeof value === "object" ? value.valueOf() : value;
   }
 
   return Object.assign(svg.node(), {scales: {color}});
-}
+}  
+
+// Assuming you have defined _nodeData, _linkData, etc., accordingly
+document.addEventListener('DOMContentLoaded', function() {
+  window.renderSankeyChart = function() {
+    const chartContainer = document.getElementById('sankey-chart');
+    chartContainer.innerHTML ='';
+    // Ensure data has been loaded
+    if (window.globalNodeData && window.globalLinkData) {
+     // console.log(window._view)
+     // console.log(window._year)
+      const _summaryText = window._view === "Consumption"
+       ? ["Emissions: "+String(window.globalSummaryData['data'][window._year-2021]['Emissions'])+' Mt C02',"Total Cost: $"+String(window.globalSummaryData['data'][window._year-2021]['Cost'])+'B']
+       : window._view === "Emissions"
+         ? ["Energy consumed: "+ String(window.globalSummaryData['data'][window._year-2021]['Consumption'])+' Quads',"Total Cost: $"+String(window.globalSummaryData['data'][window._year-2021]['Cost'])+'B']
+         : ["Energy consumed: "+ String(window.globalSummaryData['data'][window._year-2021]['Consumption'])+' Quads',"Emissions: "+String(window.globalSummaryData['data'][window._year-2021]['Emissions'])+' Mt C02'];
+      console.log("trying to draw chart")
+      console.log(window.globalNodeData)
+      const chart = SankeyChart({
+        nodes: window.globalNodeData.data,
+        links: window.globalLinkData.data,
+        summaryText: _summaryText,
+        mode: window._mode
+      }, {
+        nodeGroup: d => d.id.split(/\W/)[0],
+        format: (f => d => `${f(d)} Quads`)(d3.format(",.1~f")),
+        width: _width, // Ensure _width is defined
+        height: _height // Ensure _height is defined
+      });
+
+      // Append the chart to the DOM
+      chartContainer.appendChild(chart);
+    } else {
+      console.error("Data not loaded before attempting to render chart.");
+    }
+  }
+
+  // Call fetchDataAndUpdateChart and wait for it to complete before rendering the chart
+  window.fetchDataAndUpdateChart().then(window.renderSankeyChart).catch(error => {
+    console.error("Error fetching data or rendering chart:", error);
+  });
+});
+</script>
+<style>
+    #sankey-chart {
+      border: 2px solid #00539B; /* Sets a solid border with a color of #333 (dark gray) */
+      padding: 10px; /* Adds some space inside the border */
+      margin: 20px; /* Adds space around the outside of the div */
+      /*background-color: #f9f9f9; /* Light grey background for better visibility */
+    }
+</style>
