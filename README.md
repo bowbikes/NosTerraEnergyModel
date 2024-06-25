@@ -13,7 +13,7 @@
 ### Enhancements:
 - Both models rely on gathering extensive data, such as the LCOE and efficiency of various energy generation methods like natural gas turbines, solar PV, hydroelectric, etc.
 - We have identified key weaknesses in the existing data and assumptions, which we need help to address.
-- [LCOE Presentation](1.START_HERE/2.%20LCOE%20Review.pptx)
+- [LCOE Presentation](1.START_HERE/2.%20LCOE%20Review.pdf)
 
 ### Volunteer Contribution:
 - We need savvy, motivated volunteers to ensure we have the most comprehensive, up-to-date, and accurate dataset for each sector.
