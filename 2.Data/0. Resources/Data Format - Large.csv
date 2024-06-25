@@ -1,0 +1,21 @@
+DATA,Example,Units
+Generation Category,Wind,NA
+Generation Type,Onshore Wind,NA
+Construction time,9mo,Months
+Land requirements,200ac,Acres
+Regulatory hurdles,Mid(NEPA),(L/M/H)
+Interconnection challenges,High(remote),(L/M/H)
+Capital costs,$20m,$Million
+Capacity,10MW,MW
+Capacity Factor,45,%
+Maintenance and Operation costs – fixed costs,"$6,000,000",$
+Variable costs (scale with plant output),$200,$/MWh
+Fuel costs – a specific variable cost,0,$/BTU
+"Expected lifetime – std dev(min, max)",25yr,Years
+Discount rate for value of future money,10%,%
+Potential policy updates and changes,Mid (IRA),(L/M/H)
+Storage costs or downtime factor,$10M,$ - (80%)
+Startup/shutdown costs,$0,$
+Comparable existing generation types and prices,$0.33,$
+Potential revenue,$100M,$M/yr
+Summer capacity vs winter capacity,7.3MW-3.4MW,MW
