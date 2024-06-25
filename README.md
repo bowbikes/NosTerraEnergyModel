@@ -2,11 +2,12 @@
 - Answer questions graphically and visually.
 - Prove NosTerra’s Thesis: “abundant low-cost green energy is economically beneficial, not just socially/environmentally good.”
 - Increase NosTerra’s credibility in the energy space with policymakers and investors.
-- [Model Overview](1.START_HERE/1.%20Energy%20Model%20%20Overview.md)
+- [Model Overview](1.START_HERE/1.%20Energy%20Model%20Overview.md)
 
 ## Big Picture How:
 - Build a simple-to-moderately complex modeling system that allows users to vary parameters and make predictions.
-       ![ComplexModel](ModelDiagram/ComplexModel.png)
+
+  ![ComplexModel](ModelDiagram/ComplexModel.png)
 - A simplified version of this model was created by Spencer in Excel and translated to JavaScript to produce Sankey charts. We aim to enhance this process. [Existing Sankey](https://www.NosTerra.com/sankey-test)
 
 ### Enhancements:
