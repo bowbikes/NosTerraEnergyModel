@@ -2,7 +2,7 @@
 - Answer questions graphically and visually.
 - Prove NosTerra’s Thesis: “abundant low-cost green energy is economically beneficial, not just socially/environmentally good.”
 - Increase NosTerra’s credibility in the energy space with policymakers and investors.
-- [Model Overview](1.START_HERE/1.%20Energy%20Model%20%20Overview.docx)
+- [Model Overview](1.START_HERE/1.%20Energy%20Model%20%20Overview.md)
 
 ## Big Picture How:
 - Build a simple-to-moderately complex modeling system that allows users to vary parameters and make predictions.
